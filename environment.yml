@@ -1,0 +1,17 @@
+name: sine_toy_env
+channels:
+  - defaults
+  - pytorch
+dependencies:
+  - python=3.9          # or 3.10 if you prefer
+  - numpy=1.24          # for data generation
+  - matplotlib=3.7      # for plotting
+  - pytorch=2.0         # CPU‐only build; if you have CUDA, see note below
+  - torchvision=0.15    # useful if you want to compare examples
+  - cudatoolkit=            # *leave blank for CPU-only*; see note about CUDA below
+  - pip
+  - pip:
+      - tqdm             # optional, for progress bars if you expand the script
+      - jax              # optional, if you intend to try the JAX version later
+      - jaxlib           # ditto
+      - typing_extensions  # sometimes needed for newer JAX
