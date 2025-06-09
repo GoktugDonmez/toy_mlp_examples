@@ -6,7 +6,7 @@ Deep Ensemble Uncertainty Demo
 • Constructs a piece‑wise dataset with a deliberate gap (x ∈ (2, 3)).
 • Trains an ensemble of 10 independent MLP regressors (different seeds).
 • Visualises individual ensemble functions, the ensemble mean,
-  and ±2 σ epistemic uncertainty together with the training data.
+  and ±2 σ epistemic uncertainty together with the training data.
 
 Dependencies: math, random, numpy, torch, matplotlib (CPU‑only by default, but
 will use CUDA if available). Run this file directly:
@@ -22,16 +22,18 @@ import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
 
 # ==================== Configuration ====================
 SEEDS: List[int] = list(range(10))        # 10 models → deep ensemble
-N_EPOCHS = 3000                           # Training iterations per model
+N_EPOCHS = 300                          # Training iterations per model
 LR = 0.001                                 # Adam learning‑rate
 BATCH_SIZE = 32                           # SGD mini‑batch size
 HIDDEN = [64, 64]                         # Two hidden layers → width 64
 NOISE_STD = 0.10                          # σ of i.i.d. Gaussian label noise
-N_PER_SEGMENT = 200                       # Number of points in each segment
+N_PER_SEGMENT = 300                      # Number of points in each segment
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # ==================== Data generation ====================
@@ -42,13 +44,13 @@ def generate_data(n_per_segment: int = N_PER_SEGMENT,
     """Generate training data for the two piece‑wise quadratic/linear curves."""
     rng = np.random.default_rng(seed)
 
-    # Segment A: 0 ≤ x ≤ 2  →  y = 2x² + 2
+    # Segment A: 0 ≤ x ≤ 2  
     x_a = rng.uniform(0, 2, size=(n_per_segment,))
-    y_a = 2 * x_a ** 2 + 2
+    y_a = 2 * x_a ** 2 -0.5
 
-    # Segment B: 3 ≤ x ≤ 5  →  y = 3(x‑4) − 2
-    x_b = rng.uniform(3, 5, size=(n_per_segment,))
-    y_b = 3 * (x_b - 4) - 2
+    # Segment B: 2.5 ≤ x ≤ 5  
+    x_b = rng.uniform(2.5, 5, size=(n_per_segment,))
+    y_b = -3 * (x_b - 4) + 4
 
     # Optional homoscedastic noise for realism
     y_a += rng.normal(0, noise_std, size=y_a.shape)
@@ -136,18 +138,19 @@ def main():
     # (b) Ensemble mean + 2σ band
     plt.plot(x_grid, mean, lw=2.0, label="Ensemble mean", zorder=3)
     plt.fill_between(x_grid.squeeze(), mean - 2 * std, mean + 2 * std,
-                     alpha=0.20, label="±2 σ epistemic")
+                     alpha=0.20, label="±2 σ epistemic")
 
     # (c) Training data
     plt.scatter(x_train, y_train, s=14, c="red", label="Training data", zorder=4)
 
-    plt.title("Deep Ensemble Regression with Uncertainty (gap at 2 ≤ x ≤ 3)")
+    plt.title("Deep Ensemble Regression with Uncertainty (gap at 2.5 ≤ x ≤ 3)")
     plt.xlabel("x")
     plt.ylabel("y")
     plt.grid(alpha=0.2)
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    plt.savefig('ensemble_plot.png')
+    print("Plot has been saved as 'ensemble_plot.png'")
 
 
 if __name__ == "__main__":
